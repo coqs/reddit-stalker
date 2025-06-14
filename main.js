@@ -149,6 +149,7 @@ const bigFunction = async () => {
     await fs.promises.mkdir(output_path, { recursive: true });
   }
   fs.promises.writeFile(`${output_path}/${username}.txt`, filtered_text)
+  console.log("DONE! GO CHECK THE OUTPUT FOLDER NOW")
 }
 
 bigFunction()
