@@ -10,6 +10,7 @@ stalk people on reddit lol
 ```"gemini_api_key": "AIzaS....."``` <br />
 6) now edit the ```"username": "spicy_tables",``` with the username obviously same thing like gemini key for e.g: <br />
 ```"username": "cheesloverguy34221",``` <br />
+6.5) DONT FORGET TO SAVE THE CONFIG FILE, VERY IMPORTANT!!!! CTRL + S or File > Save <br />
 7) now run the main.bat!! wait until it says "DONE!!!!" in the command window, then your free to close the main.bat window command! <br />
 8) now go check the output folder and find the txt file with the stalk username and open it with notepad, and enjoy!
 
