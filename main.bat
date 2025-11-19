@@ -1,8 +1,8 @@
 @echo off
-echo Installing @google/generative-ai...
+echo Installing new gemini sdk
 
 REM Use call to make sure npm install completes properly in the batch script
-call npm install @google/generative-ai
+call npm install @google/genai
 
 IF %ERRORLEVEL% NEQ 0 (
     echo.
