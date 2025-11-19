@@ -1,38 +1,38 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-const fs = require("fs");
-const path = require("path");
-const https = require("https");
+import { GoogleGenAI } from "@google/genai";
+import fs from "fs";
+import path from "path";
+import https from "https";
 
 const getGeminiKey = async () => {
-  let outout = await fs.promises.readFile("./config.json", 'utf8')
-  let jsoned = JSON.parse(outout)
+  let outout = await fs.promises.readFile("./config.json", "utf8");
+  let jsoned = JSON.parse(outout);
   let output = jsoned.gemini_api_key;
   return output;
-}
+};
 
-let configuration;
+let ai;
 
-
-let logs_path = path.join(__dirname, "logs");
-let output_path = path.join(__dirname, "output")
+// paths
+let logs_path = path.join(process.cwd(), "logs");
+let output_path = path.join(process.cwd(), "output");
 let url_json = `https://www.reddit.com/user/`;
 let special_number = Math.floor(Math.random() * 99999999);
 
-//fetching with https libary
+// fetchJSON function
 function fetchJSON(url) {
   return new Promise((resolve, reject) => {
     https.get(url, { headers: { "User-Agent": "Mozilla/5.0" } }, (res) => {
       let data = "";
-      res.on("data", (chunk) => data += chunk);
+      res.on("data", (chunk) => (data += chunk));
       res.on("end", () => resolve(JSON.parse(data)));
     }).on("error", reject);
   });
 }
 
 const getConfig = async () => {
-  let path_for_config_file = path.join(__dirname, "config.json");
+  let path_for_config_file = path.join(process.cwd(), "config.json");
   try {
-    let data = await fs.promises.readFile(path_for_config_file, 'utf-8');
+    let data = await fs.promises.readFile(path_for_config_file, "utf-8");
     let json = JSON.parse(data);
     return [json.username];
   } catch (err) {
@@ -40,6 +40,7 @@ const getConfig = async () => {
   }
 };
 
+// main reddit fetcher
 const MainFunc = async () => {
   try {
     let count = 0;
@@ -47,7 +48,7 @@ const MainFunc = async () => {
     let after = null;
 
     while (count < 9999999) {
-      let url = `${url_json}${username}.json?limit=100${after ? `&after=${after}` : ''}`;
+      let url = `${url_json}${username}.json?limit=100${after ? `&after=${after}` : ""}`;
       let data = await fetchJSON(url);
 
       if (!data.data || !data.data.children.length) {
@@ -83,13 +84,14 @@ const MainFunc = async () => {
 };
 
 const geminiSummaryFunction = async (textthing) => {
-  const modelId = "gemini-2.5-flash-preview-05-20";
-  const model = configuration.getGenerativeModel({ model: modelId });
-  const result = await model.generateContent(textthing);
-  const response = await result.response;
-  const text = response.text();
-  return text;
-}
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: textthing,
+  });
+
+  return response.text();
+};
+
 
 let gemini_prompt_beggining = `
 
@@ -129,22 +131,35 @@ The Unforgettable Details: What are the 2-3 most unique facts about them that co
 How to Get Their Attention: What topics or feelings could you use to instantly connect with them or push their buttons?
 (Now, begin your analysis of the logs provided below.)
 
-`
+`;
 
 const bigFunction = async () => {
-  let geminikey = await getGeminiKey()
-  configuration = new GoogleGenerativeAI(geminikey)
+  let geminikey = await getGeminiKey();
+
+  // init new gemini client
+  ai = new GoogleGenAI({
+    apiKey: geminikey,
+  });
+
   const [username] = await getConfig();
-  await MainFunc()
-  let file_text_path = path.join(__dirname, "logs", `${username}.txt`)
-  let text_to_feed_gemini = await fs.promises.readFile(file_text_path, 'utf-8')
-  let text_to_append = await geminiSummaryFunction(`${gemini_prompt_beggining}: ${text_to_feed_gemini}`)
-  let filtered_text = text_to_append.replaceAll("*", "")
+  await MainFunc();
+
+  let file_text_path = path.join(process.cwd(), "logs", `${username}.txt`);
+  let text_to_feed_gemini = await fs.promises.readFile(file_text_path, "utf-8");
+
+  let text_to_append = await geminiSummaryFunction(
+    `${gemini_prompt_beggining}: ${text_to_feed_gemini}`
+  );
+
+  let filtered_text = text_to_append.replaceAll("*", "");
+
   if (!fs.existsSync(output_path)) {
     await fs.promises.mkdir(output_path, { recursive: true });
   }
-  fs.promises.writeFile(`${output_path}/${username}.txt`, filtered_text)
-  console.log("DONE! GO CHECK THE OUTPUT FOLDER NOW")
-}
 
-bigFunction()
+  await fs.promises.writeFile(`${output_path}/${username}.txt`, filtered_text);
+
+  console.log("DONE! GO CHECK THE OUTPUT FOLDER NOW");
+};
+
+await bigFunction();
