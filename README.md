@@ -1,4 +1,4 @@
-# reddit-stalker-2
+# reddit-stalker
 stalk people on reddit lol
 
 # how to use (windows only btw)
